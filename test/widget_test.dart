@@ -8,23 +8,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:moneyu_moyohi/main.dart';
+import 'package:moneyu_moyohi/main.dart'; // Pastikan nama package ini sesuai dengan di pubspec.yaml
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Pin Setup Screen smoke test', (WidgetTester tester) async {
+    // 1. Build aplikasi MoneyUApp
+    // Kita simulasikan sebagai user baru (startWithPinSetup: true)
+    await tester.pumpWidget(const MoneyUApp(startWithPinSetup: true));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // 2. Verifikasi bahwa halaman yang muncul adalah "Buat Sandi Anda"
+    // Mencari teks judul di halaman PinSetup
+    expect(find.text('Buat Sandi Anda'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // 3. Pastikan halaman "Masukkan Sandi" TIDAK muncul
+    expect(find.text('Masukkan Sandi Anda'), findsNothing);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // 4. Verifikasi adanya tombol SIMPAN
+    expect(find.text('SIMPAN'), findsOneWidget);
   });
 }
