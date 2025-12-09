@@ -21,13 +21,12 @@ class _HomeScreenState extends State<HomeScreen> {
   double _totalIncome = 0;
   double _totalExpense = 0;
   
-  // -- State UI Baru: Mode Pemasukan atau Pengeluaran --
-  bool _isExpenseMode = false; // false = Pemasukan (Biru), true = Pengeluaran (Merah)
+  // -- State UI: Mode Pemasukan atau Pengeluaran --
+  bool _isExpenseMode = false;
 
   // -- Controllers --
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
-  // Tambahan controller untuk kategori
   final TextEditingController _categoryController = TextEditingController();
 
   @override
@@ -44,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // Ambil data saldo
   Future<void> _refreshData() async {
     final list = await _storage.getTransactions();
     double income = 0;
@@ -64,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // -- Logika Simpan Transaksi --
   Future<void> _saveTransaction() async {
     double amount = double.tryParse(_amountController.text) ?? 0.0;
     if (amount <= 0) {
@@ -72,30 +69,27 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // Tentukan kategori otomatis jika kosong
     String category = _categoryController.text;
     if (category.isEmpty) {
       category = _isExpenseMode ? 'Umum' : 'Gaji/Masuk';
     }
 
     final newTransaction = TransactionModel(
-      // Judul otomatis jika kosong
       title: _noteController.text.isEmpty 
           ? (_isExpenseMode ? 'Pengeluaran' : 'Pemasukan') 
           : _noteController.text,
       category: category,
       amount: amount,
-      isIncome: !_isExpenseMode, // Jika mode Expense aktif, berarti isIncome = false
+      isIncome: !_isExpenseMode,
       date: DateFormat('dd MMM yyyy').format(DateTime.now()),
     );
 
     await _storage.addTransaction(newTransaction);
 
-    // Reset Form
     _amountController.clear();
     _noteController.clear();
     _categoryController.clear();
-    FocusManager.instance.primaryFocus?.unfocus(); // Tutup keyboard
+    FocusManager.instance.primaryFocus?.unfocus();
     _refreshData();
     
     if (mounted) {
@@ -112,14 +106,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Warna aktif berubah sesuai tab (Merah/Biru)
     Color activeColor = _isExpenseMode ? AppColors.redExpense : AppColors.blueChip;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // --- HEADER & SALDO (Sama seperti sebelumnya) ---
+          // HEADER & SALDO
           Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.bottomCenter,
@@ -151,12 +144,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 50),
 
-          // --- CONTENT UTAMA ---
+          // CONTENT UTAMA
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
-                // Panel Ringkasan Kecil
+                // Panel Ringkasan (Plus & Minus)
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -173,8 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // --- FORM TAB BARU (INPUT TRANSAKSI) ---
-                // Ini bagian yang menggantikan tombol lama
+                // Form Input
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -184,10 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Column(
                     children: [
-                      // 1. Tab Bar (Pemasukan | Pengeluaran)
                       Row(
                         children: [
-                          // Tab Pemasukan
                           Expanded(
                             child: GestureDetector(
                               onTap: () => setState(() => _isExpenseMode = false),
@@ -208,7 +198,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
-                          // Tab Pengeluaran
                           Expanded(
                             child: GestureDetector(
                               onTap: () => setState(() => _isExpenseMode = true),
@@ -231,8 +220,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-
-                      // 2. Isi Form (Berubah sesuai Tab)
                       Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -243,32 +230,24 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontWeight: FontWeight.bold, color: activeColor, fontSize: 16),
                             ),
                             const SizedBox(height: 16),
-                            
-                            // Input Nominal
                             TextField(
                               controller: _amountController,
                               keyboardType: TextInputType.number,
                               decoration: _inputDecor("Nominal (Rp)", activeColor),
                             ),
                             const SizedBox(height: 12),
-
-                            // Input Kategori (Hanya muncul jika mode Pengeluaran)
                             if (_isExpenseMode) ...[
                               TextField(
                                 controller: _categoryController,
-                                decoration: _inputDecor("Kategori (Cth: Makan, Transport)", activeColor),
+                                decoration: _inputDecor("Kategori (Cth: Makan)", activeColor),
                               ),
                               const SizedBox(height: 12),
                             ],
-
-                            // Input Catatan
                             TextField(
                               controller: _noteController,
                               decoration: _inputDecor("Catatan (Opsional)", activeColor),
                             ),
                             const SizedBox(height: 20),
-
-                            // Tombol Simpan
                             SizedBox(
                               width: double.infinity,
                               height: 50,
@@ -294,10 +273,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // Bottom Navigasi
+      
+      // --- FOOTER NAVIGASI (Index 1) ---
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, 
-        selectedItemColor: AppColors.blueChip,
+        currentIndex: 1,
+        backgroundColor: AppColors.bluePrimary,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const NotesScreen()));
@@ -305,10 +289,43 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AnalysisScreen()));
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_book.png')), label: "Buku"),
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_wallet.png')), label: "Dompet"),
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_insight.png')), label: "Analisis"),
+        items: [
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_2.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_2.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Buku",
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_1.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_1.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Dompet",
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_3.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_3.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Analisis",
+          ),
         ],
       ),
     );
@@ -323,10 +340,21 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isAdd ? Icons.add : Icons.remove,
+                    color: color,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Image.asset(isAdd ? 'assets/ic_add.png' : 'assets/ic_remove.png', width: 16, color: color),
               ],
             ),
             const SizedBox(height: 8),

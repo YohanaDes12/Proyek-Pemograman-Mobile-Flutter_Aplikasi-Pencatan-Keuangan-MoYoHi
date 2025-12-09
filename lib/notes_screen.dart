@@ -54,20 +54,64 @@ class _NotesScreenState extends State<NotesScreen> {
                 return _buildNoteItem(item);
               },
             ),
+            
+      // --- FOOTER NAVIGASI (Index 0) ---
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
-        selectedItemColor: AppColors.blueChip,
+        backgroundColor: AppColors.bluePrimary,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 1) {
+            // Pindah ke Dompet
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
           } else if (index == 2) {
+            // Pindah ke Analisis
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AnalysisScreen()));
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_book.png')), label: "Buku"),
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_wallet.png')), label: "Dompet"),
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_insight.png')), label: "Analisis"),
+        items: [
+          // ITEM 1: BUKU
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_2.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_2.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Buku",
+          ),
+          // ITEM 2: DOMPET
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_1.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_1.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Dompet",
+          ),
+          // ITEM 3: ANALISIS
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_3.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_3.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Analisis",
+          ),
         ],
       ),
     );
@@ -84,7 +128,6 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
       child: Row(
         children: [
-          // Icon panah (Naik/Turun)
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(

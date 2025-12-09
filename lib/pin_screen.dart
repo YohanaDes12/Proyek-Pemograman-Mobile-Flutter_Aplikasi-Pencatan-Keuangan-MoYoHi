@@ -63,6 +63,38 @@ class _PinScreenState extends State<PinScreen> {
     }
   }
 
+  Future<void> _confirmResetPin() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Konfirmasi"),
+        content: const Text("Anda yakin ingin membuat PIN baru? PIN lama akan dihapus."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Lanjutkan"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('USER_PIN');
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PinScreen(isSetup: true)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +108,7 @@ class _PinScreenState extends State<PinScreen> {
               width: double.infinity,
               color: AppColors.bluePrimary,
               alignment: Alignment.center,
-              child: Image.asset('assets/ic_logo.png', width: 120, height: 120),
+              child: Image.asset('assets/images/logo.png', width: 120, height: 120, fit: BoxFit.contain),
             ),
           ),
           // Form Input
@@ -114,6 +146,20 @@ class _PinScreenState extends State<PinScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Tombol "Lupa Sandi?" hanya saat verifikasi (isSetup == false)
+                  if (!widget.isSetup)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _confirmResetPin,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.blueChip,
+                        ),
+                        child: const Text("Lupa Sandi?"),
+                      ),
+                    ),
+
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.blueChip,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart'; // Import paket grafik
+import 'package:fl_chart/fl_chart.dart';
 import 'constants.dart';
 import 'home_screen.dart';
 import 'notes_screen.dart';
@@ -16,11 +16,9 @@ class AnalysisScreen extends StatefulWidget {
 class _AnalysisScreenState extends State<AnalysisScreen> {
   final StorageService _storage = StorageService();
   
-  // Data untuk ditampilkan
   Map<String, double> _categoryTotals = {};
   double _totalExpense = 0;
 
-  // Palet warna untuk kategori (akan diputar ulang jika kategori > 6)
   final List<Color> _colorPalette = [
     AppColors.blueChip,
     AppColors.redChip,
@@ -42,7 +40,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     double tempTotalExpense = 0;
 
     for (var item in list) {
-      if (!item.isIncome) { // Hanya hitung pengeluaran
+      if (!item.isIncome) { 
         tempTotalExpense += item.amount;
         if (tempTotals.containsKey(item.category)) {
           tempTotals[item.category] = tempTotals[item.category]! + item.amount;
@@ -66,14 +64,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Siapkan data list agar bisa diakses dengan index untuk warna
     final List<MapEntry<String, double>> categoryList = _categoryTotals.entries.toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header Biru
           Container(
             height: 120,
             width: double.infinity,
@@ -90,33 +86,64 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // 1. Grafik Lingkaran (Pie Chart)
                 if (_totalExpense > 0)
                   SizedBox(
-                    height: 220,
-                    child: PieChart(
-                      PieChartData(
-                        sectionsSpace: 2, // Jarak antar potongan
-                        centerSpaceRadius: 40, // Bolong di tengah (Donut chart)
-                        sections: List.generate(categoryList.length, (index) {
-                          final entry = categoryList[index];
-                          final percentage = (entry.value / _totalExpense) * 100;
-                          final color = _colorPalette[index % _colorPalette.length];
-                          
-                          return PieChartSectionData(
-                            color: color,
-                            value: entry.value,
-                            title: '${percentage.toStringAsFixed(1)}%', // Tampilkan %
-                            radius: 60,
-                            titleStyle: const TextStyle(
-                              fontSize: 12, 
-                              fontWeight: FontWeight.bold, 
-                              color: Colors.white,
-                              shadows: [Shadow(color: Colors.black26, blurRadius: 2)],
+                    height: 320,  // ← Tinggi ditambah untuk ruang persentase & legend
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 220,
+                          child: PieChart(
+                            PieChartData(
+                              sectionsSpace: 2, 
+                              centerSpaceRadius: 40,
+                              sections: List.generate(categoryList.length, (index) {
+                                final entry = categoryList[index];
+                                final percentage = (entry.value / _totalExpense) * 100;
+                                final color = _colorPalette[index % _colorPalette.length];
+                                
+                                return PieChartSectionData(
+                                  color: color,
+                                  value: entry.value,
+                                  title: '',  // ← Kosongkan title (persentase akan di luar)
+                                  radius: 60,
+                                );
+                              }),
                             ),
-                          );
-                        }),
-                      ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Legend & Persentase
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: List.generate(categoryList.length, (index) {
+                            final entry = categoryList[index];
+                            final percentage = (entry.value / _totalExpense) * 100;
+                            final color = _colorPalette[index % _colorPalette.length];
+                            
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${entry.key} (${percentage.toStringAsFixed(1)}%)',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
+                      ],
                     ),
                   )
                 else
@@ -136,7 +163,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
                 const SizedBox(height: 24),
 
-                // 2. Kartu Total Pengeluaran
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -158,14 +184,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 const Text("Rincian Kategori", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
 
-                // 3. List Kategori (Legend)
                 if (_categoryTotals.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(40),
                     child: Center(child: Text("Belum ada data pengeluaran", style: TextStyle(color: Colors.grey))),
                   )
                 else
-                  // Menggunakan index agar warna list cocok dengan warna grafik
                   ...List.generate(categoryList.length, (index) {
                     final entry = categoryList[index];
                     final color = _colorPalette[index % _colorPalette.length];
@@ -176,10 +200,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           ),
         ],
       ),
-      // Navigasi Bawah
+      
+      // --- FOOTER NAVIGASI (konstan di semua screen) ---
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2, // Halaman Analisis
-        selectedItemColor: AppColors.blueChip,
+        currentIndex: 2,
+        backgroundColor: AppColors.bluePrimary,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const NotesScreen()));
@@ -187,10 +216,43 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_book.png')), label: "Buku"),
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_wallet.png')), label: "Dompet"),
-          BottomNavigationBarItem(icon: ImageIcon(AssetImage('assets/ic_insight.png')), label: "Analisis"),
+        items: [
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_2.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_2.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Buku",
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_1.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_1.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Dompet",
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset('assets/images/icon_3.png', width: 32, height: 32, color: Colors.white70),
+            activeIcon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset('assets/images/icon_3.png', width: 28, height: 28, color: Colors.white),
+            ),
+            label: "Analisis",
+          ),
         ],
       ),
     );
@@ -207,7 +269,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
       child: Row(
         children: [
-          // Warna Indikator sesuai Pie Chart
           Container(
             width: 16, height: 16, 
             decoration: BoxDecoration(
